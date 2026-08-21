@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>typescript</title>
+  <style>
+    textarea {
+      display: block;
+      width: 80vw;
+      height: 50vh;
+      margin: 0 auto;
+      padding: 2vw;
+    }
+    pre {
+      margin: 10px auto;
+      padding: 20px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 输入框 -->
+  <textarea id="textarea" placeholder="请输入JSON" ></textarea>
+
+  <!-- pre 换行 空格 内容 -->
+  <pre id="pre" cols="30" rows="10"></pre>
+
+  <!-- js -->
+  <script>
+    /**
+    * 选中文字 2023-09-18 13:58:07 Ywr
+    * @param {Range} element
+    */
+    function selectText(element) {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    /**
+    * 获取Type类型 2023-09-18 13:58:41 Ywr
+    */
+    function getTS(jsonData) {
+      if (typeof jsonData === 'string') {
+        jsonData = JSON.parse(jsonData);
+      }
+      const getType = (data) => {
+        if (Array.isArray(data)) {
+          if (data.length === 0) {
+            return 'any[]';
+          }
+          else {
+            const itemType = getType(data[0]);
+            return `${itemType}[]`;
+          }
+        }
+        else if (typeof data === 'object' && data !== null) {
+          const properties = Object.keys(data).map((key) => {
+            return `\n\t${key}: ${getType(data[key])}`;
+          });
+          const length = properties.length
+          let str = `{`;
+          properties.forEach((el, i) => {
+            if (length !== i + 1) {
+              str += `${el},`
+            }
+            else {
+              str += `${el}`
+            }
+          });
+          str += `\n}`
+          return str;
+        }
+        else {
+          return typeof data;
+        }
+      };
+
+      return`${getType(jsonData)}`;
+    }
+
+    // 初始化
+    window.onload = () => {
+      let textarea = document.getElementById('textarea');
+      let pre = document.getElementById('pre');
+
+      textarea.focus();
+      textarea.onblur = (e) => {
+        let obj = JSON.parse(e.target.value)
+        let typeObj = `type obj = ${getTS(obj)}`
+        pre.innerHTML = typeObj
+        // 选中文字
+        selectText(pre);
+      }
+    }
+  </script>
+</body>
+</html>
